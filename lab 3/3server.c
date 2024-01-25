@@ -38,7 +38,7 @@ int main(){
   	}
   	printf("\nSocket listening.\n");
   	len = sizeof(client);
-  	int ns = accept(sockfd, (struct sockaddr * ) & client, & len);#include<string.h>
+  	int ns = accept(sockfd, (struct sockaddr * ) & client, & len);
   	if(ns==-1){
   		close(sockfd);
   		exit(0);
