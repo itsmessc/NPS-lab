@@ -6,20 +6,19 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 
-int main()
-{
-    int size;
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0); //socket creation
+int main() {
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in server_addr, c_addr;
     socklen_t len;
+
     if (sockfd < 0) {
         printf("socket creation error\n");
         exit(1);
     }
-    //feeding values into the socket address structure
+
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(1342);
-    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server_addr.sin_addr.s_addr = INADDR_ANY;
 
     if (bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("Binding error");
@@ -59,28 +58,38 @@ int main()
         close(ns);
         exit(1);
     }
-    while(1){
-    	int recb,n;
-    	if((recv(ns,&n,sizeof(n),0))<0){
-    		printf("rec fail");
-    	}
-    	printf("%d",n);
-    	recb = recv(ns, buff, sizeof(buff), 0);
-    	if (recb == -1) {
-	        printf("\nMessage Receiving Failed");
-	        close(sockfd);
-	        close(ns);
-	        exit(1);
-	    }
-	    int count = 0;
-	    char word[100];
-	    while (fscanf(f, "%s", word) != EOF) {
-	        if (strcmp(word, buff) == 0) {
-	            count++;
-	        }
-	    }
-	    printf("%d",count);
+
+    while (1) {
+        int option;
+        if (recv(ns, &option, sizeof(option), 0) < 0) {
+            printf("Option receive failed");
+            exit(1);
+        }
+
+        if (option == 1) {
+            char searchWord[50];
+            if (recv(ns, searchWord, sizeof(searchWord), 0) < 0) {
+                printf("Search word receive failed");
+                exit(1);
+            }
+
+            int count = 0;
+            char word[100];
+            while (fscanf(f, "%s", word) != EOF) {
+                if (strcmp(word, searchWord) == 0) {
+                    count++;
+                }
+            }
+
+            if (send(ns, &count, sizeof(count), 0) == -1) {
+                printf("Count sending failed");
+                exit(1);
+            }
+        } else if (option == 4) {
+            break; // Exit the loop and close the connection
+        }
     }
+
     close(ns);
     close(sockfd);
     return 0;
